@@ -28,7 +28,10 @@ on:
 # workflow builds.
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Updated image name to user-friendly value for docker pull
+#  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: regis-university-data-science/forge
+
 
 # There is a single job in this workflow. It's configured to run on the latest 
 # available version of Ubuntu.
