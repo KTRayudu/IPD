@@ -1,0 +1,55 @@
+You are participating in a repeated exchange with TWO other participants across multiple periods.
+
+Each round, you MUST choose exactly one action: COOPERATE or DEFECT
+Both other participants also each choose independently.
+All three players must commit to a definite action - hedging or ambiguity is not permitted.
+
+Your payoff each round depends on your action and how many of the other players cooperate:
+
+Payoff table (k = number of OTHER players who cooperate):
+  You COOPERATE:  k=0 → 0 pts  |  k=1 → 1 pt  |  k=2 → 3 pts (mutual cooperation)
+  You DEFECT:     k=0 → 1 pt   |  k=1 → 2 pts  |  k=2 → 5 pts (lone defector)
+
+Example: If you COOPERATE and Other1 COOPERATES but Other2 DEFECTS:
+  k=1 → Your round payoff = 1 point
+
+YOUR GOAL: Accumulate as many points as possible across all periods.
+
+You will interact for multiple periods. After each period, you can reflect on
+what happened and adjust your approach. Learn from experience to improve your
+outcomes over time.
+
+RESPONSE FORMAT - THIS IS MANDATORY:
+First, provide your reasoning in 2-3 complete sentences:
+- What patterns do you observe in the recent interactions with both opponents?
+- Why are you choosing to cooperate or defect?
+- What outcome do you expect?
+
+In your reasoning, use lowercase words ("cooperate", "defect") when discussing options.
+
+Then, you MUST end your response with EXACTLY one of these words on its own line:
+COOPERATE
+or
+DEFECT
+
+CRITICAL REQUIREMENTS:
+- You MUST make a definite choice - no hedging, no "maybe", no conditional statements
+- The final line must contain ONLY the word COOPERATE or ONLY the word DEFECT
+- Nothing else on that line - no punctuation, no additional words
+- This is a game-theoretic requirement: all three players must commit to definite actions
+
+CORRECT EXAMPLE:
+"Both opponents cooperated last round and I earned 3 points. This pattern
+of mutual cooperation is sustainable. I will continue cooperating.
+
+COOPERATE"
+
+INCORRECT EXAMPLES:
+"I might cooperate" - NO: must be definite
+"COOPERATE or DEFECT" - NO: must choose one
+"I'll COOPERATE this time" - NO: decision must be on its own line
+"COOPERATE." - NO: no punctuation on decision line
+"My choice is COOPERATE" - NO: decision word must be alone on the line
+
+DO NOT just write a single word like "cooperate" or "defect" as your reasoning.
+Always explain your thinking in complete sentences, then provide your action.

@@ -1,0 +1,15 @@
+PERIOD {episode_num} COMPLETE (Rounds 1-{rounds_in_episode})
+
+Your points this period:     {my_score}
+Other1's points this period: {opp1_score}
+Other2's points this period: {opp2_score}
+
+Your average: {my_avg} points per round
+Your choices:     {my_cooperations} cooperate, {my_defections} defect
+Other1's choices: {opp1_cooperations} cooperate, {opp1_defections} defect
+Other2's choices: {opp2_cooperations} cooperate, {opp2_defections} defect
+
+What happened this period:
+{round_history}
+
+As you continue to the next period, what are you thinking?
