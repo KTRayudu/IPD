@@ -46,7 +46,11 @@ from config import EpisodeConfig
 
 
 class EpisodicIPDGame:
-    """Manages a 3-agent episodic IPD game"""
+    """Orchestrates a 3-agent episodic IPD game across multiple episodes and rounds.
+
+    Manages per-agent histories, computes true N-player payoffs, collects reflections,
+    and assembles the full results dictionary written to JSON.
+    """
 
     def __init__(
         self,
@@ -57,6 +61,12 @@ class EpisodicIPDGame:
         system_prompt_text: str = "",
         reflection_template_text: str = ""
     ):
+        """Store the three agents, config, and prompt text; validate config and initialise score tracking.
+
+        Required: agent_0, agent_1, agent_2 (OllamaAgent instances), config (EpisodeConfig).
+        Optional: system_prompt_text and reflection_template_text are stored for JSON output only.
+        Raises ValueError via config.validate() if payoff constants violate T > R > P > S or 2R > T+S.
+        """
         self.agent_0 = agent_0
         self.agent_1 = agent_1
         self.agent_2 = agent_2         # NEW
@@ -82,11 +92,11 @@ class EpisodicIPDGame:
         episode_history_2: List[Dict],
         episode_scores: Dict[int, int]
     ) -> Tuple[str, str, str, Dict]:
-        """
-        Play one round with 3 agents.
+        """Collect decisions from all three agents and compute true N-player payoffs for one round.
 
-        Returns:
-            (action_0, action_1, action_2, round_data)
+        Required: round_num, episode_num, per-agent history lists, episode_scores dict (mutated in place).
+        Applies the TABLE I payoff formula via config.payoff_for_agent using each agent's k_C count.
+        Returns (action_0, action_1, action_2, round_data_dict) where round_data is written to JSON.
         """
         if self.config.verbose:
             print(f"  Round {round_num + 1}/{self.config.rounds_per_episode}", end=" ", flush=True)
@@ -192,7 +202,12 @@ class EpisodicIPDGame:
         return action_0, action_1, action_2, round_data
 
     def play_episode(self, episode_num: int) -> Dict:
-        """Play one complete episode with all 3 agents."""
+        """Run all rounds for one episode, collect reflections, and reset/seed agent contexts.
+
+        Required: episode_num (0-based index used for display and prompt formatting).
+        After all rounds, calls _get_reflection for each agent and resets conversation if configured.
+        Returns an episode_data dict with per-agent scores, cooperation counts, rates, and reflections.
+        """
         print(f"\n{'='*80}", flush=True)
         print(f"PERIOD {episode_num + 1}/{self.config.num_episodes}", flush=True)
         print(f"{'='*80}", flush=True)
@@ -273,7 +288,12 @@ class EpisodicIPDGame:
         return episode_data
 
     def play_game(self) -> Dict:
-        """Play the full multi-episode game and return results dict."""
+        """Run all episodes and return the complete results dictionary for JSON serialisation.
+
+        Iterates over num_episodes, calling play_episode for each, and aggregates total scores and cooperation rates.
+        Prints a summary via _print_summary and records elapsed time, config, and per-agent outcomes.
+        Returns a results dict matching the JSON schema expected by database_insertion.ipynb and forgedb.py.
+        """
         print(f"\n{'='*80}", flush=True)
         print("3-AGENT EPISODIC IPD SIMULATION", flush=True)
         print(f"{'='*80}", flush=True)
@@ -367,7 +387,12 @@ class EpisodicIPDGame:
         opp2_score: int,
         agent_idx: int
     ) -> Tuple[str, str]:
-        """Get a definite decision from an agent with retry logic."""
+        """Format the round prompt and call agent.generate_with_forced_decision to get a definite action.
+
+        Required: agent (OllamaAgent), round_num, episode_num, history list, three cumulative scores, agent_idx.
+        Defaults to DEFECT with a warning if the agent fails to respond after all retries.
+        Returns (decision, response_text) where decision is 'COOPERATE' or 'DEFECT'.
+        """
         prompt = format_round_prompt(
             round_num, episode_num, history,
             my_score, opp1_score, opp2_score,
@@ -394,7 +419,12 @@ class EpisodicIPDGame:
         opp1_score: int,
         opp2_score: int
     ) -> str:
-        """Get post-episode reflection from agent."""
+        """Format the reflection prompt and call agent.generate to get a strategic end-of-episode reflection.
+
+        Required: agent, episode_num, full episode history list, three cumulative scores.
+        Selects reflection_prompt_type and template_file from config; passes include_statistics flag.
+        Returns the reflection string, or a fallback message if the agent fails to respond.
+        """
         # Pass template_file only when reflection_prompt_type is "custom";
         # otherwise format_episode_reflection_prompt uses built-in templates.
         template_file = (
@@ -414,7 +444,7 @@ class EpisodicIPDGame:
         return reflection if reflection is not None else "Agent failed to provide reflection"
 
     def _print_summary(self, results: Dict):
-        """Print final game summary."""
+        """Print the final per-agent score table and per-episode breakdown to stdout."""
         print(f"\n{'='*80}", flush=True)
         print("FINAL SUMMARY (3 AGENTS)", flush=True)
         print(f"{'='*80}", flush=True)
@@ -443,6 +473,12 @@ class EpisodicIPDGame:
 # CLI entry point
 # ======================================================================
 def main():
+    """CLI entry point: parse arguments, build EpisodeConfig and three OllamaAgents, run the game, save JSON.
+
+    Accepts --model-0/1/2, --host-0/1/2, --episodes, --rounds, --temperature, --history-window and more.
+    Loads system_prompt.txt and reflection_prompt_template.txt from disk (falls back to defaults if missing).
+    Writes results to results/3agent_game_YYYYMMDD_HHMMSS.json or the path given by --output.
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="3-Agent Episodic IPD with LLM Agents")

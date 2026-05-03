@@ -14,6 +14,11 @@
         agent_idx 0, 1, and 2 explicitly (because SQL pivoting requires explicit
         column definitions).
 
+    Practicum I - MSDS 692/S41: Data Science Practicum I
+    Emily D. Carpenter
+    Anderson College of Business and Computing, Regis University
+    Dr. Douglas Hart, Dr. Kellen Sorauf
+    March 2026
 """
 
 import argparse
@@ -36,7 +41,18 @@ logging.basicConfig(
 
 
 class ForgeDB:
+    """PostgreSQL interface for the ipd3 schema — reads, writes, and queries experiment results.
+
+    Wraps psycopg connections with helper methods for each analytical view, research log CRUD,
+    and JSON-to-database ETL for 3-agent IPD experiment files.
+    """
+
     def __init__(self, host='platinum', dbname='forge', user=None):
+        """Open a psycopg connection to the forge PostgreSQL database using dict_row cursors.
+
+        Required: host (default 'platinum'), dbname (default 'forge').
+        user defaults to the current OS user via getpass if not provided.
+        """
         if user is None:
             import getpass
             user = getpass.getuser()
@@ -48,36 +64,52 @@ class ForgeDB:
         )
 
     def close(self):
+        """Close the database connection."""
         self.conn.close()
 
     # ------------------------------------------------------------------
     # Query methods (mirror ipd2 interface but target ipd3 schema)
     # ------------------------------------------------------------------
     def query(self, sql, params=None):
+        """Execute a raw SQL query and return all rows as a list of dicts.
+
+        sql is any SELECT statement; params is an optional dict of bind values.
+        """
         with self.conn.cursor() as cur:
             cur.execute(sql, params)
             return cur.fetchall()
 
     def get_raw_data(self, **kwargs):
+        """Query ipd3.raw_data_vw and return results as a DataFrame. Accepts filter kwargs."""
         return self._query_view('raw_data_vw', **kwargs)
 
     def get_results(self, **kwargs):
+        """Query ipd3.results_vw and return one row per experiment run as a DataFrame."""
         return self._query_view('results_vw', **kwargs)
 
     def get_summary(self, **kwargs):
+        """Query ipd3.experiment_summary_vw with per-run aggregates as a DataFrame."""
         return self._query_view('experiment_summary_vw', **kwargs)
 
     def get_episode_summary(self, **kwargs):
+        """Query ipd3.episode_summary_vw with per-episode aggregates as a DataFrame."""
         return self._query_view('episode_summary_vw', **kwargs)
 
     def get_rounds_summary(self, **kwargs):
+        """Query ipd3.rounds_summary_vw with per-round aggregates as a DataFrame."""
         return self._query_view('rounds_summary_vw', **kwargs)
 
     def get_rounds_detail(self, **kwargs):
+        """Query ipd3.rounds_detail_vw with full per-round detail including reasoning text."""
         return self._query_view('rounds_detail_vw', **kwargs)
 
     def _query_view(self, view_name, start_date=None, end_date=None,
                     username=None, filename=None, comment=None, limit=None):
+        """Execute a parameterised SELECT against a named ipd3 view and return a DataFrame.
+
+        Supported filter kwargs: start_date, end_date, username, filename, comment (all LIKE-matched), limit.
+        All filters are optional and combined with AND; raises on any database error.
+        """
         try:
             sql = f"SELECT * FROM ipd3.{view_name} WHERE 1=1"
             params = {}
@@ -117,6 +149,11 @@ class ForgeDB:
     # ------------------------------------------------------------------
     def add_log(self, remarks, username=None, subject='General',
                 log_dttm=None, tags=None):
+        """Insert a new entry into ipd3.research_log and return the generated log_id.
+
+        Required: remarks (free-text note). Optional: username (defaults to OS user), subject, log_dttm, tags (list).
+        Commits immediately; rolls back and re-raises on error.
+        """
         try:
             if username is None:
                 import getpass
@@ -150,6 +187,11 @@ class ForgeDB:
 
     def get_log(self, username=None, subject=None, remarks=None,
                 tags=None, start_date=None, end_date=None, limit=None):
+        """Query ipd3.research_log with optional filters and return results as a DataFrame.
+
+        All parameters are optional; strings use LIKE matching, tags supports list (array contains) or scalar (ANY).
+        Results are ordered by log_dttm ascending; limit caps the row count.
+        """
         try:
             sql = "SELECT * FROM ipd3.research_log WHERE 1=1"
             params = {}
@@ -188,6 +230,11 @@ class ForgeDB:
             raise
 
     def delete_log(self, log_id):
+        """Delete one or more research_log entries by log_id and return the count deleted.
+
+        log_id can be a single int, a list of ints, or a (start, end) tuple for range deletion.
+        Commits immediately; rolls back and re-raises on error.
+        """
         try:
             with self.conn.cursor() as cur:
                 if isinstance(log_id, tuple):
@@ -224,13 +271,11 @@ class ForgeDB:
     # JSON import — updated for 3 agents
     # ------------------------------------------------------------------
     def load_json(self, filepath, user_name='unknown'):
-        """
-        Import a 3-agent JSON results file into the ipd3 schema.
+        """Import one 3-agent JSON results file into the ipd3 schema (results, llm_agents, episodes, rounds).
 
-        Changes vs. ipd2 forgedb.py:
-          - Reads data['config']['model_2'] for the third agent.
-          - The llm_agents / episodes / rounds loops are already dynamic
-            (they iterate while f'agent_{idx}' in data) — no loop change needed.
+        Required: filepath (path to a JSON file produced by episodic_ipd_game.py).
+        Agent, episode, and round loops are dynamic so the same method handles 2- or 3-agent files.
+        Returns (results_id, username) on success, None if the file is a duplicate (UniqueViolation).
         """
         try:
             with open(filepath, 'r') as f:
@@ -385,6 +430,12 @@ class ForgeDB:
             raise
 
     def load_batch(self, source, pattern='*.json', user_name='unknown'):
+        """Load multiple JSON result files from a directory or an explicit list.
+
+        source can be a directory path (files matched by pattern) or a list of file paths.
+        Calls load_json for each file; skips duplicates and continues on individual failures.
+        Returns a dict with 'loaded', 'skipped', and 'failed' lists.
+        """
         if isinstance(source, list):
             filepaths = source
         else:
@@ -415,6 +466,11 @@ class ForgeDB:
         return results
 
     def get_files(self, path, user_name='unknown'):
+        """Dispatch to load_json, load_batch, or glob-based load_batch depending on path type.
+
+        path can be a single file, a directory, or a glob pattern (e.g. 'results/*.json').
+        Returns load_json result for a single file, load_batch result for directory/glob, or None if not found.
+        """
         if os.path.isfile(path):
             return self.load_json(path, user_name)
         elif os.path.isdir(path):

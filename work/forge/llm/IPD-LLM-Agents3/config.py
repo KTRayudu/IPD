@@ -65,24 +65,11 @@ class EpisodeConfig:
         return self.num_episodes * self.rounds_per_episode
 
     def payoff_for_agent(self, action: str, k_C: int, N: int) -> int:
-        """
-        True N-player IPD payoff (TABLE I formula).
+        """Compute per-agent payoff using the true N-player IPD formula (TABLE I).
 
-        Args:
-            action: 'COOPERATE' or 'DEFECT'
-            k_C:    number of OTHER agents who cooperated this round
-            N:      total number of agents in the game
-
-        Returns:
-            Integer payoff for this agent this round.
-
-        Formula verified against TABLE I (N=3):
-            f(C, 0, 3) = min(0, 3) = 0   (C,D,D): cooperator gets 0
-            f(C, 1, 3) = min(1, 3) = 1   (C,C,D): cooperator gets 1
-            f(C, 2, 3) = R      = 3       (C,C,C): all cooperate, get 3
-            f(D, 0, 3) = min(1, 5) = 1   (D,D,D): all defect, get 1
-            f(D, 1, 3) = min(2, 5) = 2   (D,D,C): two defectors get 2
-            f(D, 2, 3) = T      = 5       (D,C,C): lone defector gets 5
+        action is 'COOPERATE' or 'DEFECT'; k_C is the count of OTHER agents cooperating; N is total agents.
+        COOPERATE yields min(k_C, R) or R when all others cooperate; DEFECT yields min(P+k_C, T) or T when lone defector.
+        Returns an integer payoff in range 0–5 (N=3 standard case).
         """
         if action in ('C', 'COOPERATE'):
             return self.reward if k_C == N - 1 else min(k_C, self.reward)

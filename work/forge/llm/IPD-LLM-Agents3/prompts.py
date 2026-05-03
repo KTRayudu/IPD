@@ -16,6 +16,11 @@ from pathlib import Path
 
 
 def load_system_prompt(prompt_file: str = "system_prompt.txt") -> str:
+    """Load the system prompt from a text file and return it as a string.
+
+    prompt_file is the path to the .txt file (default: system_prompt.txt in the working directory).
+    Raises FileNotFoundError if the file does not exist.
+    """
     prompt_path = Path(prompt_file)
     if not prompt_path.exists():
         raise FileNotFoundError(f"System prompt file not found: {prompt_file}")
@@ -24,6 +29,11 @@ def load_system_prompt(prompt_file: str = "system_prompt.txt") -> str:
 
 
 def load_reflection_template(template_file: str = "reflection_prompt_template.txt") -> str:
+    """Load a custom reflection prompt template from a text file.
+
+    template_file is the path to a .txt file with Python format-string placeholders (e.g. {episode_num}).
+    Raises FileNotFoundError if the file does not exist.
+    """
     template_path = Path(template_file)
     if not template_path.exists():
         raise FileNotFoundError(f"Reflection template file not found: {template_file}")
@@ -104,11 +114,11 @@ def format_round_prompt(
     opp2_score: int,
     window_size: int = 10
 ) -> str:
-    """
-    Format prompt for a single round within an episode (3-agent version).
+    """Format the round prompt shown to one agent before it makes its decision.
 
-    history entries contain keys:
-        my_action, opp1_action, opp2_action, my_payoff, opp1_payoff, opp2_payoff
+    Required: round_num (0-based), episode_num (0-based), history (list of prior round dicts),
+    my_score/opp1_score/opp2_score (cumulative episode scores), window_size (rounds to display).
+    Returns a formatted string including score totals and a truncated history table.
     """
     if round_num == 0:
         return f"""PERIOD {episode_num + 1}, ROUND 1:
@@ -155,11 +165,11 @@ def format_episode_reflection_prompt(
     include_statistics: bool = True,
     template_file: str = None
 ) -> str:
-    """
-    Format reflection prompt at end of episode (3-agent version).
+    """Format the end-of-episode reflection prompt for one agent.
 
-    history entries contain keys:
-        my_action, opp1_action, opp2_action, my_payoff, opp1_payoff, opp2_payoff
+    Required: episode_num, history (full episode round list), scores for all three agents,
+    rounds_in_episode, reflection_type ('minimal'/'standard'/'detailed'/'custom').
+    Returns a string summarising the episode and prompting strategic reflection.
     """
     my_coops  = sum(1 for r in history if r['my_action']   == 'COOPERATE')
     opp1_coops = sum(1 for r in history if r['opp1_action'] == 'COOPERATE')
