@@ -402,7 +402,7 @@ class EpisodicIPDGame:
         decision, response = agent.generate_with_forced_decision(prompt, extract_decision)
 
         if decision is None:
-            print(f"  ⚠️  CRITICAL: {agent.agent_id} failed to decide after all retries", flush=True)
+            print(f"   CRITICAL: {agent.agent_id} failed to decide after all retries", flush=True)
             print(f"      Defaulting to DEFECT", flush=True)
             if response:
                 print(f"      Last response: {response[:200]}...", flush=True)
