@@ -79,7 +79,7 @@ class OllamaAgent:
                 return assistant_message
 
             except requests.exceptions.RequestException as e:
-                print(f"  ⚠️  {self.agent_id} API error (attempt {attempt + 1}/{max_retries}): {e}")
+                print(f"   {self.agent_id} API error (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     time.sleep(2)
                 else:
@@ -102,7 +102,7 @@ class OllamaAgent:
             return decision, response
 
         for retry in range(self.force_decision_retries):
-            print(f"  ⚠️  {self.agent_id} gave ambiguous response, forcing decision "
+            print(f"   {self.agent_id} gave ambiguous response, forcing decision "
                   f"(attempt {retry + 1}/{self.force_decision_retries})")
 
             force_prompt = """Your previous response did not clearly specify COOPERATE or DEFECT.

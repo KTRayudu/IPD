@@ -14,11 +14,6 @@
         agent_idx 0, 1, and 2 explicitly (because SQL pivoting requires explicit
         column definitions).
 
-    Practicum I - MSDS 692/S41: Data Science Practicum I
-    Emily D. Carpenter
-    Anderson College of Business and Computing, Regis University
-    Dr. Douglas Hart, Dr. Kellen Sorauf
-    March 2026
 """
 
 import argparse
