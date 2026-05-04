@@ -134,47 +134,56 @@ psql -U postgres -f database/setup_forge_db3.sql
 
 ## Running an Experiment
 
-```python
-from config import EpisodeConfig
-from episodic_ipd_game import EpisodicIPDGame
+Run directly from the command line — no code changes needed:
 
-config = EpisodeConfig(
-    num_episodes=50,
-    rounds_per_episode=20,
-    temperature=0.7,
-    history_window_size=10,
-    reset_conversation_between_episodes=True,
-    model_0="llama3:8b-instruct-q5_K_M", host_0="localhost",
-    model_1="gemma2:9b-instruct",         host_1="localhost",
-    model_2="mistral:7b-instruct",        host_2="localhost",
-    force_decision_retries=2,
-)
+```bash
+# Quickstart with all defaults
+python episodic_ipd_game.py
 
-game = EpisodicIPDGame(config)
-results = game.play_game()
+# Study configuration used in the paper
+python episodic_ipd_game.py \
+  --episodes 50 \
+  --rounds 20 \
+  --temperature 0.7 \
+  --history-window 10 \
+  --model-0 llama3:8b-instruct-q5_K_M --host-0 localhost \
+  --model-1 gemma2:9b-instruct         --host-1 localhost \
+  --model-2 mistral:7b-instruct        --host-2 localhost \
+  --reflection-type standard
+
+# Example: high-temperature run with detailed reflection
+python episodic_ipd_game.py \
+  --episodes 50 --temperature 1.0 --history-window 5 \
+  --reflection-type detailed --quiet
 ```
 
-Results are saved as `results/3agent_game_YYYYMMDD_HHMMSS.json`.
+Results are saved automatically as `results/3agent_game_YYYYMMDD_HHMMSS.json`.
 
 ---
 
 ## Configuration Options
 
-All parameters are set in `EpisodeConfig` in `config.py`:
+All flags for `episodic_ipd_game.py`:
 
-| Parameter | Default | Description |
+| Flag | Default | Description |
 |---|---|---|
-| `num_episodes` | 5 | Number of episodes per run |
-| `rounds_per_episode` | 20 | Rounds within each episode |
-| `temperature` | 0.7 | LLM sampling temperature (0.2 / 0.7 / 1.0 used in study) |
-| `history_window_size` | 10 | Recent rounds shown to agent (5 / 10 / 20 used in study) |
-| `reset_conversation_between_episodes` | True | Clear context between episodes |
-| `model_0/1/2` | `llama3:8b-instruct-q5_K_M` | Model for each of the three agents |
-| `host_0/1/2` | `iron` | Ollama host for each agent |
-| `decision_token_limit` | 256 | Max tokens for round decision |
-| `reflection_token_limit` | 1024 | Max tokens for episode reflection |
-| `force_decision_retries` | 2 | Retries if decision cannot be extracted |
-| `reflection_prompt_type` | `standard` | `minimal` / `standard` / `detailed` / `custom` |
+| `--episodes` | `5` | Number of episodes per run |
+| `--rounds` | `20` | Rounds within each episode |
+| `--temperature` | `0.7` | LLM sampling temperature (0.2 / 0.7 / 1.0 used in study) |
+| `--history-window` | `10` | Recent rounds shown to agent (5 / 10 / 20 used in study) |
+| `--model-0/1/2` | `llama3:8b-instruct-q5_K_M` | Model for each of the three agents |
+| `--host-0/1/2` | `tungsten` | Ollama host for each agent |
+| `--no-reset` | off | Keep conversation context across episodes |
+| `--reflection-type` | `standard` | `minimal` / `standard` / `detailed` |
+| `--system-prompt` | `system_prompt.txt` | Path to system prompt file |
+| `--reflection-template` | `reflection_prompt_template.txt` | Path to custom reflection template |
+| `--output` | auto-timestamped | Override output JSON path |
+| `--decision-tokens` | `256` | Max tokens for round decision |
+| `--reflection-tokens` | `1024` | Max tokens for episode reflection |
+| `--http-timeout` | `60` | Ollama request timeout in seconds |
+| `--force-retries` | `2` | Retries if decision cannot be extracted |
+| `--comment` | — | Freetext note embedded in the output JSON |
+| `--quiet` | off | Suppress per-round console output |
 
 ---
 
