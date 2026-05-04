@@ -1,8 +1,8 @@
 # IPD-LLM-Agents3
 
-A three-agent N-player Iterated Prisoner's Dilemma simulation using open-source Large Language Model agents. Three LLMs from different model families — Llama3-8B, Gemma2-9B, and Mistral-7B — play a repeated cooperation game across multiple episodes, produce natural language reasoning for every decision, write strategic reflections between episodes, and have all results stored in a PostgreSQL database for analysis.
+A three-agent Iterated Prisoner's Dilemma simulation using open-source Large Language Model agents. Three LLMs from different model families Llama3-8B, Gemma2-9B, and Mistral-7B  play a repeated cooperation game across multiple episodes, produce natural language reasoning for every decision, write strategic reflections between episodes, and have all results stored in a PostgreSQL database for analysis.
 
-This project extends IPD-LLM-Agents2 (two-agent) to three agents and three model families. It was conducted as a Practicum II research study at Regis University.
+This project extends IPD-LLM-Agents2 (two-agent) to three agents 
 
 ---
 
@@ -276,6 +276,4 @@ Reflection texts were scored against the extended Moral Foundations Dictionary f
 
 ---
 
-## Citation
 
-Kommineni Tirupathi Rayudu. *A Multi-Agent Iterated Prisoner's Dilemma Study Using Large Language Model Agents.* MS Data Science Practicum II, Regis University, 2026.
