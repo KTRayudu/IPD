@@ -17,7 +17,36 @@ This project extends IPD-LLM-Agents2 (two-agent) to three agents and three model
 | 1L+1M+1G | Llama3 × Mistral × Gemma2 | 41.6% |
 | 2G+1L | Gemma2 × Gemma2 × Llama3 | 38.2% |
 
-79 experiment runs total. Model composition identity accounts for **86.2%** of predictive importance (SHAP). Gradient Boosting cross-validation R² = **0.6835**.
+79 experiment runs total. Model composition identity accounts for **82.5%** of predictive importance (SHAP). Gradient Boosting cross-validation R² = **0.6835**.
+
+---
+
+## System Architecture
+
+The simulation is organised into four layers:
+
+- **Configuration Layer** — `EpisodeConfig` validates all game parameters and passes a config object to the engine.
+- **Game Engine** — `EpisodicIPDGame` drives the episode/round loop, dispatches individual prompts to each agent, collects the three decisions, and scores each round.
+- **Agent Layer** — Three `OllamaAgent` instances each communicate with their Ollama server via HTTP POST to `/api/chat`. Each agent maintains its own conversation history.
+- **Output Layer** — The full results dictionary is serialised to a timestamped JSON file in `results/`.
+
+```
+CONFIGURATION LAYER
+       │  validated config object
+       ▼
+   GAME ENGINE  ──────────────────────────────────────────┐
+       │  prompt_1 / prompt_2 / prompt_3                  │ results dict → JSON
+       ▼                                                   │
+   AGENT LAYER                                            ▼
+  ┌──────────┐   ┌──────────┐   ┌──────────┐    OUTPUT LAYER
+  │ AGENT 1  │   │ AGENT 2  │   │ AGENT 3  │    results/*.json
+  │          │   │          │   │          │
+  │ Ollama   │   │ Ollama   │   │ Ollama   │
+  │ :11434   │   │ :11434   │   │ :11434   │
+  └──────────┘   └──────────┘   └──────────┘
+       │  decision_1 / decision_2 / decision_3
+       └──────────────────────────────────────► GAME ENGINE
+```
 
 ---
 
@@ -25,34 +54,39 @@ This project extends IPD-LLM-Agents2 (two-agent) to three agents and three model
 
 ```
 IPD-LLM-Agents3/
-├── config.py                    # EpisodeConfig dataclass — all game parameters
-├── prompts.py                   # System prompt, round prompt, reflection prompt, decision extractor
-├── ollama_agent.py              # LLM agent wrapper — Ollama HTTP API calls
-├── episodic_ipd_game.py         # Main game loop — runs episodes, rounds, saves JSON
-├── forgedb.py                   # Database interface — writes results to PostgreSQL
-├── system_prompt.txt            # Default system prompt (loaded at runtime)
-├── system_prompt_moral.txt      # Moral framing variant
-├── system_prompt_selfinterest.txt  # Self-interest framing variant
-├── reflection_prompt_template.txt  # Custom reflection template (optional)
-│
-├── database/
-│   └── setup_forge_db3.sql      # PostgreSQL schema — ipd3 schema, tables, views
-│
-├── database_insertion.ipynb     # ETL notebook — JSON → PostgreSQL
-├── db_testing1.ipynb            # Database query and validation notebook
+├── config.py                          # EpisodeConfig dataclass — all game parameters
+├── episodic_ipd_game.py               # Main game loop — episodes, rounds, JSON output
+├── forgedb.py                         # Database interface — writes results to PostgreSQL
+├── ollama_agent.py                    # LLM agent wrapper — Ollama HTTP API calls
+├── prompts.py                         # Prompt formatting, reflection templates, decision extractor
+├── system_prompt.txt                  # Default system prompt (neutral framing)
+├── system_prompt_moral.txt            # Moral framing variant
+├── system_prompt_selfinterest.txt     # Self-interest framing variant
+├── reflection_prompt_template.txt     # Custom reflection template (optional)
+├── analysis_plots_final_code.ipynb    # EDA and visualisation notebook
+├── database_insertion_final.ipynb     # ETL notebook — JSON → PostgreSQL
+├── json_csv.ipynb                     # CSV export notebook — PostgreSQL views → CSV
 │
 ├── csv_output/
-│   ├── enriched_registry.csv    # Primary analytical dataset (79 rows × 27 columns)
-│   ├── episode_level.csv        # Episode-level aggregates
-│   ├── round_level_with_text.csv   # Round-level data including reasoning text
-│   └── round_level_no_text.csv     # Round-level data without text columns
+│   ├── enriched_registry.csv          # Primary analytical dataset (79 rows × 27 columns)
+│   ├── episode_level.csv              # Episode-level aggregates per agent per run
+│   ├── round_level_with_text.csv      # Round-level data including reasoning text
+│   └── round_level_no_text.csv        # Round-level data without text columns
+│
+├── database/
+│   └── setup_forge_db3.sql            # PostgreSQL schema — ipd3 tables and views
 │
 ├── ipd_ml_env/
-│   └── ml_analysis.ipynb        # ML pipeline — 8 models, GridSearchCV, SHAP
+│   └── ml_analysis_final_code.ipynb   # ML pipeline — 8 models, GridSearchCV, SHAP
 │
 └── results/
-    ├── 3agent_game_YYYYMMDD_HHMMSS.json   # One JSON file per experiment run
-    └── compare_history3_temp3/            # Analysis charts (SVG/PNG)
+    ├── B2_Combined_RoBERTa_Trajectory_Coop_2_1.png   # Sentiment trajectory + cooperation rate
+    ├── CR1_01_coop_heatmaps_12_1.png                 # Cooperation rate heatmaps (all 6 groups)
+    ├── MFT02_heatmap_coop_26_1.png                   # Moral foundations heatmap
+    ├── MFT02_heatmap_coop_27_1.png                   # Moral foundations heatmap with coop bar
+    ├── ml01_shap_summary_final_32.png                 # SHAP feature importance bar chart
+    ├── TH04A_box_by_temperature_HW10_24_1.png        # Temperature effect boxplot (HW=10)
+    └── TH04B_box_by_hw_Temp0.2_24_1.png              # History window effect boxplot (T=0.2)
 ```
 
 ---
@@ -72,10 +106,10 @@ Standard IPD values: T=5, R=3, P=1, S=0. Constraints T > R > P > S and 2R > T + 
 
 ### Episode Structure
 
-- Each run: 5 episodes × 20 rounds = 100 rounds total
+- Each run: 50 episodes × 20 rounds = 1,000 rounds total
 - Each round: all three agents receive their history window and produce reasoning + decision
 - Each episode end: all three agents write a strategic reflection
-- Reflections are injected into the next episode's context (when reset=True)
+- Reflections are injected into the next episode's context (when `reset_conversation_between_episodes=True`)
 
 ---
 
@@ -86,7 +120,7 @@ Standard IPD values: T=5, R=3, P=1, S=0. Constraints T > R > P > S and 2R > T + 
 - Python 3.12+
 - [Ollama](https://ollama.com/) running locally or on a reachable host
 - PostgreSQL (for database storage)
-- GPU with enough VRAM for the chosen models (8B–9B models require ~6–8 GB each)
+- GPU with enough VRAM for the chosen models (8B–9B models require approximately 6–8 GB each)
 
 ### Install dependencies
 
@@ -116,10 +150,10 @@ psql -U postgres -f database/setup_forge_db3.sql
 
 ```python
 from config import EpisodeConfig
-from episodic_ipd_game import run_experiment
+from episodic_ipd_game import EpisodicIPDGame
 
 config = EpisodeConfig(
-    num_episodes=5,
+    num_episodes=50,
     rounds_per_episode=20,
     temperature=0.7,
     history_window_size=10,
@@ -130,7 +164,8 @@ config = EpisodeConfig(
     force_decision_retries=2,
 )
 
-run_experiment(config)
+game = EpisodicIPDGame(config)
+results = game.play_game()
 ```
 
 Results are saved as `results/3agent_game_YYYYMMDD_HHMMSS.json`.
@@ -148,18 +183,18 @@ All parameters are set in `EpisodeConfig` in `config.py`:
 | `temperature` | 0.7 | LLM sampling temperature (0.2 / 0.7 / 1.0 used in study) |
 | `history_window_size` | 10 | Recent rounds shown to agent (5 / 10 / 20 used in study) |
 | `reset_conversation_between_episodes` | True | Clear context between episodes |
-| `model_0/1/2` | llama3:8b-instruct-q5_K_M | Model for each of the three agents |
-| `host_0/1/2` | iron | Ollama host for each agent |
+| `model_0/1/2` | `llama3:8b-instruct-q5_K_M` | Model for each of the three agents |
+| `host_0/1/2` | `iron` | Ollama host for each agent |
 | `decision_token_limit` | 256 | Max tokens for round decision |
 | `reflection_token_limit` | 1024 | Max tokens for episode reflection |
 | `force_decision_retries` | 2 | Retries if decision cannot be extracted |
-| `reflection_prompt_type` | standard | `minimal` / `standard` / `detailed` / `custom` |
+| `reflection_prompt_type` | `standard` | `minimal` / `standard` / `detailed` / `custom` |
 
 ---
 
 ## Loading Results to Database
 
-Open `database_insertion.ipynb` and run all cells. It reads all JSON files from `results/`, validates them, and inserts them into the `ipd3` PostgreSQL schema.
+Open `database_insertion_final.ipynb` and run all cells. It reads all JSON files from `results/`, validates them, and inserts them into the `ipd3` PostgreSQL schema.
 
 The schema contains:
 
@@ -170,7 +205,9 @@ The schema contains:
 | `ipd3.episodes` | One row per agent per episode |
 | `ipd3.rounds` | One row per agent per round |
 
-Five analytical SQL views are also created: `results_vw`, `experiment_summary_vw`, `episode_summary_vw`, `rounds_summary_vw`, `rounds_detail_vw`.
+Five analytical SQL views: `results_vw`, `experiment_summary_vw`, `episode_summary_vw`, `rounds_summary_vw`, `rounds_detail_vw`.
+
+To export from the database to CSV, run `json_csv.ipynb`.
 
 ---
 
@@ -182,13 +219,13 @@ Five analytical SQL views are also created: `results_vw`, `experiment_summary_vw
 
 ### Machine Learning
 
-Open `ipd_ml_env/ml_analysis.ipynb`. The notebook runs 8 regression models (Ridge, Lasso, ElasticNet, RandomForest, ExtraTrees, GradientBoosting, AdaBoost, SVR) with GridSearchCV hyperparameter tuning and five-fold cross-validation, then applies SHAP TreeExplainer to the best model.
+Open `ipd_ml_env/ml_analysis_final_code.ipynb`. The notebook runs 8 regression models (Ridge, Lasso, ElasticNet, RandomForest, ExtraTrees, GradientBoosting, AdaBoost, SVR) with GridSearchCV hyperparameter tuning and five-fold cross-validation, then applies SHAP TreeExplainer to the best model.
 
-Best result: **GradientBoosting — CV R² = 0.6835**
+Best result: **GradientBoosting — CV R² = 0.6835** (n_estimators=50, learning_rate=0.2, max_depth=2, subsample=0.7, min_samples_leaf=5)
 
 SHAP attribution:
-- Model identity features: **86.2%** of importance
-- Game configuration (temperature, history window, reset, retries): **13.8%**
+- Model identity features: **82.5%** of importance
+- Game configuration (temperature, history window, reset, retries): **17.5%**
 
 ### Sentiment Analysis
 
@@ -212,7 +249,7 @@ Reflection texts were scored against the extended Moral Foundations Dictionary f
 - 3Gemma: 100% at all temperatures — fully immune
 - 3Llama: drops from 94.4% at T=0.2 to 70.9% at T=1.0
 - 2G+1L: collapses from 83.4% at T=0.2 to 18.0% at T=0.7 — most volatile group
-- Mistral-containing groups: the only groups that *increase* cooperation with higher temperature
+- Mistral-containing groups: the only groups that increase cooperation with higher temperature
 
 **History window effect** (temperature fixed at 0.2):
 - HW=10 is the optimum for 5 of 6 groups simultaneously
@@ -236,9 +273,11 @@ Reflection texts were scored against the extended Moral Foundations Dictionary f
 | `episodic_ipd_game.py` | Main simulation loop |
 | `forgedb.py` | PostgreSQL write interface |
 | `database/setup_forge_db3.sql` | Full schema with tables and views |
-| `database_insertion.ipynb` | JSON → database ETL |
-| `ipd_ml_env/ml_analysis.ipynb` | Full ML + SHAP analysis |
-| `csv_output/enriched_registry.csv` | 79-row analytical dataset |
+| `database_insertion_final.ipynb` | JSON → database ETL |
+| `json_csv.ipynb` | Database views → CSV export |
+| `analysis_plots_final_code.ipynb` | EDA and all visualisation charts |
+| `ipd_ml_env/ml_analysis_final_code.ipynb` | Full ML + SHAP analysis |
+| `csv_output/enriched_registry.csv` | 79-row primary analytical dataset |
 
 ---
 
