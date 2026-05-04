@@ -30,23 +30,7 @@ The simulation is organised into four layers:
 - **Agent Layer** — Three `OllamaAgent` instances each communicate with their Ollama server via HTTP POST to `/api/chat`. Each agent maintains its own conversation history.
 - **Output Layer** — The full results dictionary is serialised to a timestamped JSON file in `results/`.
 
-```
-CONFIGURATION LAYER
-       │  validated config object
-       ▼
-   GAME ENGINE  ──────────────────────────────────────────┐
-       │  prompt_1 / prompt_2 / prompt_3                  │ results dict → JSON
-       ▼                                                   │
-   AGENT LAYER                                            ▼
-  ┌──────────┐   ┌──────────┐   ┌──────────┐    OUTPUT LAYER
-  │ AGENT 1  │   │ AGENT 2  │   │ AGENT 3  │    results/*.json
-  │          │   │          │   │          │
-  │ Ollama   │   │ Ollama   │   │ Ollama   │
-  │ :11434   │   │ :11434   │   │ :11434   │
-  └──────────┘   └──────────┘   └──────────┘
-       │  decision_1 / decision_2 / decision_3
-       └──────────────────────────────────────► GAME ENGINE
-```
+![System Architecture](images/architect2.png)
 
 ---
 
@@ -63,6 +47,8 @@ IPD-LLM-Agents3/
 ├── system_prompt_moral.txt            # Moral framing variant
 ├── system_prompt_selfinterest.txt     # Self-interest framing variant
 ├── reflection_prompt_template.txt     # Custom reflection template (optional)
+├── images/
+│   └── architect2.png                 # System architecture diagram
 ├── analysis_plots_final_code.ipynb    # EDA and visualisation notebook
 ├── database_insertion_final.ipynb     # ETL notebook — JSON → PostgreSQL
 ├── json_csv.ipynb                     # CSV export notebook — PostgreSQL views → CSV
