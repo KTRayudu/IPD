@@ -206,38 +206,6 @@ To export from the database to CSV, run `json_csv.ipynb`.
 
 ---
 
-## Analysis
-
-### Primary Dataset
-
-`csv_output/enriched_registry.csv` — 79 rows × 27 columns. Each row is one experiment run. Target variable: `mean_group_coop_rate`.
-
-### Machine Learning
-
-Open `ipd_ml_env/ml_analysis_final_code.ipynb`. The notebook runs 8 regression models (Ridge, Lasso, ElasticNet, RandomForest, ExtraTrees, GradientBoosting, AdaBoost, SVR) with GridSearchCV hyperparameter tuning and five-fold cross-validation, then applies SHAP TreeExplainer to the best model.
-
-Best result: **GradientBoosting — CV R² = 0.6835** (n_estimators=50, learning_rate=0.2, max_depth=2, subsample=0.7, min_samples_leaf=5)
-
-SHAP attribution:
-- Model identity features: **82.5%** of importance
-- Game configuration (temperature, history window, reset, retries): **17.5%**
-
-### Sentiment Analysis
-
-Episode reflections were scored using `cardiffnlp/twitter-roberta-base-sentiment-latest` (three-class: positive / neutral / negative). Compound score = P(positive) − P(negative).
-
-| Group | Mean Sentiment | Cooperation Rate |
-|---|---|---|
-| 3Gemma | +0.97 | 100.0% |
-| 3Llama | +0.55 | 74.3% |
-| 2G+1L | −0.17 | 38.2% |
-
-### Moral Foundations Theory
-
-Reflection texts were scored against the extended Moral Foundations Dictionary for six foundations. Loyalty/Betrayal dominates every group (83.5–104.4 per 1,000 words), consistent with the trust-and-betrayal structure of the game.
-
----
-
 ## Results
 
 ### 1. Cooperation Rate by Model Composition
