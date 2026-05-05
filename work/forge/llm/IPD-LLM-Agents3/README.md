@@ -270,7 +270,7 @@ The heatmap below scores each group's episode reflection text against six moral 
 
 ![Moral Foundations Heatmap](results/MFT02_heatmap_coop_26_1.png)
 
-![Moral Foundations Heatmap with Cooperation Rate](results/MFT02_heatmap_coop_27_1.png)
+
 
 ---
 
