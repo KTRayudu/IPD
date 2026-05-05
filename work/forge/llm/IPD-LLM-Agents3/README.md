@@ -268,8 +268,8 @@ Reflection texts were scored against the extended Moral Foundations Dictionary f
 | `episodic_ipd_game.py` | Main simulation loop |
 | `forgedb.py` | PostgreSQL write interface |
 | `database/setup_forge_db3.sql` | Full schema with tables and views |
-| `database_insertion_final.ipynb` | JSON → database ETL |
-| `json_csv.ipynb` | Database views → CSV export |
+| `database_insertion_final.ipynb` | JSON to database ETL |
+| `json_csv.ipynb` | Database views to CSV export |
 | `analysis_plots_final_code.ipynb` | EDA and all visualisation charts |
 | `ipd_ml_env/ml_analysis_final_code.ipynb` | Full ML + SHAP analysis |
 | `csv_output/enriched_registry.csv` | 79-row primary analytical dataset |
