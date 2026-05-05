@@ -10,12 +10,12 @@ This project extends IPD-LLM-Agents2 (two-agent) to three agents
 
 | Group | Composition | Mean Cooperation Rate |
 |---|---|---|
-| 3G | Gemma2 × Gemma2 × Gemma2 | **100.0%** |
-| 3L | Llama3 × Llama3 × Llama3 | 74.3% |
-| 2L+1G | Llama3 × Llama3 × Gemma2 | 61.5% |
-| 2L+1M | Llama3 × Llama3 × Mistral | 49.5% |
-| 1L+1M+1G | Llama3 × Mistral × Gemma2 | 41.6% |
-| 2G+1L | Gemma2 × Gemma2 × Llama3 | 38.2% |
+| 3G | Gemma2 - Gemma2 - Gemma2 | **100.0%** |
+| 3L | Llama3 - Llama3 - Llama3 | 74.3% |
+| 2L+1G | Llama3 - Llama3 - Gemma2 | 61.5% |
+| 2L+1M | Llama3 - Llama3 - Mistral | 49.5% |
+| 1L+1M+1G | Llama3 - Mistral - Gemma2 | 41.6% |
+| 2G+1L | Gemma2 - Gemma2 - Llama3 | 38.2% |
 
 79 experiment runs total. Model composition identity accounts for **82.5%** of predictive importance (SHAP). Gradient Boosting cross-validation R² = **0.6835**.
 
