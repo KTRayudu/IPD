@@ -9,6 +9,7 @@ import json
 import time
 import socket
 import getpass
+import os                   # Added 3/30/2026 for Containerized Architecture @edc
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -371,7 +372,7 @@ class EpisodicIPDGame:
 def main():
     """Run an episodic IPD game"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Episodic IPD with LLM Agents")
     parser.add_argument("--episodes", type=int, default=5, help="Number of episodes")
     parser.add_argument("--rounds", type=int, default=20, help="Rounds per episode")
@@ -379,9 +380,18 @@ def main():
                        help="Number of recent rounds to show in history (default: 10)")
     parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature")
     parser.add_argument("--model-0", type=str, default="llama3:8b-instruct-q5_K_M")
-    parser.add_argument("--host-0", type=str, default="tungsten")
     parser.add_argument("--model-1", type=str, default="llama3:8b-instruct-q5_K_M")
-    parser.add_argument("--host-1", type=str, default="tungsten")
+
+    # Begin Containerized Architecture changes #####################################################
+    # parser.add_argument("--host-0", type=str, default="tungsten")
+    # parser.add_argument("--host-1", type=str, default="tungsten")
+
+    DEFAULT_HOST_0 = os.environ.get('OLLAMA_HOST_0', 'tungsten')
+    DEFAULT_HOST_1 = os.environ.get('OLLAMA_HOST_1', 'tungsten')
+    parser.add_argument("--host-0", type=str, default=DEFAULT_HOST_0)
+    parser.add_argument("--host-1", type=str, default=DEFAULT_HOST_1)
+    # End Containerized Architecture changes @edc, 3/30/2026 #######################################
+
     parser.add_argument("--no-reset", action="store_true", help="Don't reset context between episodes")
     parser.add_argument("--reflection-type", type=str, default="standard", 
                        choices=["minimal", "standard", "detailed"])

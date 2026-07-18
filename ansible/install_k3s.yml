@@ -1,0 +1,52 @@
+#*******************************************************************************
+# Install Lightweight Kubernetes (K3s)
+# 
+# Purpose:  Installs K3s server on primary node, agents on all other nodes.
+# Usage:    ansible-playbook -K -i ansible/inventory.ini ansible/install_k3s.yml
+# 
+# Ref: https://docs.k3s.io/quick-start
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+---
+- name: Install K3s server
+  hosts: control
+  become: true
+
+  tasks:
+    # Ref: https://docs.k3s.io/installation/configuration
+    # --write-kubeconfig-mode 644 allows non-root users to read the kubeconfig
+    # and run kubectl without sudo (default is 600, root-only)
+    - name: Install K3s server
+      shell: curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 --default-runtime=nvidia
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Get node token
+      command: cat /var/lib/rancher/k3s/server/node-token
+      register: k3s_token
+      changed_when: false
+
+    - name: Store token as fact
+      set_fact:
+        k3s_node_token: "{{ k3s_token.stdout }}"
+
+- name: Install K3s agents
+  hosts: all:!control
+  become: true
+
+  tasks:
+    - name: Install K3s agent
+      shell: >
+        curl -sfL https://get.k3s.io |
+        K3S_URL=https://{{ groups['control'][0] }}:6443
+        K3S_TOKEN={{ hostvars[groups['control'][0]]['k3s_node_token'] }}
+        sh -s - --default-runtime=nvidia
+      args:
+        creates: /usr/local/bin/k3s

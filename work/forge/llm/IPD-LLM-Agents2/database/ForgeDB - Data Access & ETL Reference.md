@@ -537,7 +537,7 @@ psql -h platinum -d forge -U $USER -c "SELECT 1"
 ### Problem: Permission Denied
 **Symptom:** `permission denied for schema ipd2`
 
-See the [Verify Database Access](#verify-database-access) section to create your role and grant schema access. If issues persist, contact the principal investigators: Dr. Douglas Hart (douglas.hart@regis.edu) or Dr. Kellen Sorauf (kellen.sorauf@regis.edu).
+See the [Verify Database Access](#verify-database-access) section to create your role and grant schema access. If issues persist, contact the principal investigators: Dr. Douglas Hart (dhart@regis.edu) or Dr. Kellen Sorauf (ksorauf@regis.edu).
 
 ### Problem: Duplicate File Skipped
 **Symptom:** `Duplicate file skipped: results/game.json`
@@ -553,11 +553,11 @@ Older JSON files may have a different structure. Check `forgedb.log` for the spe
 
 ## Contact
 Principal investigators:
-**Doug Hart**: douglas.hart@regis.edu  
-**Kellen Sorauf**: kellen.sorauf@regis.edu
+**Doug Hart**: dhart@regis.edu  
+**Kellen Sorauf**: ksorauf@regis.edu
 
 Database & ETL author during Spring 2026 semester:
-**Emily Carpenter**: emily.carpenter@regis.edu  
+**Emily Carpenter**: ecarpenter004@regis.edu  
 
 **Database Server:** `platinum` — Database: `forge` — Schema: `ipd2`
 

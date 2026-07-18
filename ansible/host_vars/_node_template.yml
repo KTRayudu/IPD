@@ -1,0 +1,36 @@
+#*******************************************************************************
+# Node Configuration Template
+# 
+# Purpose:  Template for adding new nodes to the FORGE cluster.
+#
+# Instructions:
+#   1. Copy this file to host_vars/<hostname>.yml
+#   2. The filename MUST match the hostname in inventory.ini
+#   3. Uncomment and edit all variables below
+#   4. Add the hostname to inventory.ini
+#
+# Ref: Use 'nvidia-smi' to identify GPU model and memory.
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+# IP address
+# host_ip: 192.168.1.100
+
+# GPU hardware configuration
+# gpu_primary: gpu-model-name
+# gpu_primary_mib: 0
+
+# For nodes with multiple GPUs, add secondary/tertiary entries:
+# gpu_secondary: gpu-model-name
+# gpu_secondary_mib: 0
+# gpu_tertiary: gpu-model-name
+# gpu_tertiary_mib: 0
+
+# gpu_count: 1
+# gpu_vram_total_mib: 0

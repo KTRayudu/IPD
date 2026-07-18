@@ -1,22 +1,23 @@
 #*******************************************************************************
-# Practicum II - FORGE Docker Container Setup
-# 
-# Emily D. Carpenter
-# Anderson College of Business and Computing, Regis University
-# MSDS 696/S71: Data Science Practicum II
-# Dr. Douglas Hart, Dr. Kellen Sorauf
-# February-May 2026
+# FORGE Docker Container Setup
+#
+# Remarks:
+#   Be sure to verify current GitHub action versions for tags [2].
 #
 # References:
 # 1. https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images#publishing-images-to-github-packages
 # 2. https://github.com/marketplace?type=actions
 # 3. https://docs.github.com/en/actions/reference/security/secure-use
 #
-# Remarks:
-#   Be sure to verify current GitHub action versions for tags [2].
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
 #*******************************************************************************
 
-name: Build FORGE Docker Container
+name: Build FORGE Code Docker Container
 
 # Configures this workflow to run every time a change is pushed to the GitHub branch.
 on:
@@ -28,7 +29,7 @@ on:
 # workflow builds.
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/forge
+  IMAGE_NAME: ${{ github.repository_owner }}/forge-code
 
 # There is a single job in this workflow. It's configured to run on the latest 
 # available version of Ubuntu.
@@ -85,7 +86,7 @@ jobs:
         uses: docker/build-push-action@v7 # https://github.com/docker/build-push-action
         with:
           context: .
-          file: docker/forge/Dockerfile
+          file: docker/forge-code/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

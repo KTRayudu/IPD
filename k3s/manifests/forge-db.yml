@@ -1,0 +1,81 @@
+#*******************************************************************************
+# FORGE PostgreSQL Database Deployment
+#
+# Purpose:  Deploy the ForgeDB container with persistent storage
+# Usage:    kubectl apply -f k3s/manifests/forge-db.yml
+#
+# Ref: https://kubernetes.io/docs/concepts/workloads/pods/
+#
+# Persistent storage for PostgreSQL data; survives container restarts and redeployments
+# Handled separately in forge-db-storage.yml.
+#
+# NOTE: Start the forge-db-storage.yml resources FIRST.
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+---
+# Deploys the ForgeDB container on the primary host with persistent storage
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forge-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: forge-db
+  template:
+    metadata:
+      labels:
+        app: forge-db
+    spec:
+       # Set this to the primary host that persistent storage will reside on
+      nodeSelector:
+        kubernetes.io/hostname: platinum
+
+      # DB container built for research project and hosted on GitHub
+      containers:
+        - name: forge-db
+          image: ghcr.io/regis-university-data-science/forge-db:main
+          imagePullPolicy: Always
+          
+          # Required by PostgreSQL docker container (https://hub.docker.com/_/postgres)
+          env:
+            - name: POSTGRES_DB
+              value: forge
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+      
+      # Ties back to first section of this file
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: forge-db-data
+
+---
+# Exposes the database to the cluster and to bare-metal clients via NodePort
+apiVersion: v1
+kind: Service
+metadata:
+  name: forge-db
+spec:
+  # NodePort exposes the service on each node's IP at a static port (30432)
+  # Internal pods connect via forge-db:5432
+  # External clients connect via <hostname>:30432
+
+  type: NodePort        # makes it accessible both inside and outside the cluster
+  selector:
+    app: forge-db       # helps find the pod by matching label from Deployment
+  ports:
+    - port: 5432        # port used by other pods in the cluster
+      targetPort: 5432  # port PostgreSQL is listening on from within the container
+      nodePort: 30432   # port exposed on physical node for bare-metal clients

@@ -1,0 +1,65 @@
+#*******************************************************************************
+# Uninstall FORGE K3s Cluster
+# 
+# Purpose:  Cleanly uninstall K3s from all nodes for a fresh start
+# Usage:    ansible-playbook -K -i ansible/inventory.ini ansible/uninstall_k3s.yml
+#
+# NOTE:     Ensure SSH keys are loaded prior to execution (ssh-add)
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+
+---
+- name: Uninstall K3s agents
+  hosts: all:!control
+  become: true
+
+  tasks:
+    - name: Uninstall K3s agent
+      shell: /usr/local/bin/k3s-agent-uninstall.sh
+      ignore_errors: true
+
+    - name: Clean up leftover K3s files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/local/bin/k3s
+        - /usr/local/bin/kubectl
+        - /usr/local/bin/crictl
+        - /usr/local/bin/ctr
+        - /var/lib/rancher
+        - /etc/rancher
+
+    - name: Remove broken containerd template
+      file:
+        path: /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+        state: absent
+      ignore_errors: true
+
+- name: Uninstall K3s server
+  hosts: control
+  become: true
+
+  tasks:
+    - name: Uninstall K3s server
+      shell: /usr/local/bin/k3s-uninstall.sh
+      ignore_errors: true
+
+    - name: Clean up leftover K3s files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/local/bin/k3s
+        - /usr/local/bin/kubectl
+        - /usr/local/bin/crictl
+        - /usr/local/bin/ctr
+        - /var/lib/rancher
+        - /etc/rancher

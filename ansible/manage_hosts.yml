@@ -1,0 +1,35 @@
+#*******************************************************************************
+# Manage FORGE Cluster /etc/hosts
+# 
+# Purpose: Standardize cluster hostname entries across all nodes using managed markers.
+# 
+# NOTE: This playbook manages the FORGE node membership. Variables are loaded 
+#   from the host_vars/ directory. Ensure each host in inventory.ini has a matching 
+#   host_vars file.
+# 
+# Usage: ansible-playbook -K -i ansible/inventory.ini ansible/manage_hosts.yml
+# Usage (no changes): ansible-playbook -K -i ansible/inventory.ini ansible/manage_hosts.yml --check
+#
+# Ref: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/blockinfile_module.html
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+---
+- name: Manage FORGE cluster host entries
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Configure FORGE cluster hosts
+      blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} FORGE CLUSTER"
+        block: |
+          {% for host in groups['all'] %}
+          {{ hostvars[host]['host_ip'] }}  {{ host }}
+          {% endfor %}

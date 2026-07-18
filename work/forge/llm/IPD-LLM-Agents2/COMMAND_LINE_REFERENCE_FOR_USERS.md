@@ -627,8 +627,8 @@ in LLM Agents through Iterated Prisoner's Dilemma. Regis University.
 
 ## Contact
 
-**Doug Hart**: douglas.hart@regis.edu  
-**Kellen Sorauf**: kellen.sorauf@regis.edu
+**Doug Hart**: dhart@regis.edu  
+**Kellen Sorauf**: ksorauf@regis.edu
 
 **Project Location**: `/home/dhart/work/forge/llm/IPD-LLM-Agents2` on platinum server
 

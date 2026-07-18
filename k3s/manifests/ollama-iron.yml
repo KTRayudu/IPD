@@ -1,0 +1,75 @@
+#*******************************************************************************
+# FORGE Ollama Agent Deployments
+# 
+# Purpose:  Deploy Ollama LLM inference containers on GPU-capable cluster nodes
+# Usage:    kubectl apply -f k3s/manifests/ollama-iron.yml
+#
+# Ref: https://hub.docker.com/r/ollama/ollama
+# Ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+#
+# Each GPU node gets its own Ollama deployment pinned to that node.
+# Models are stored in a persistent volume mounted from the host to avoid
+# re-downloading large model files on container restarts.
+#
+# Bare-metal clients connect via <hostname>:12434
+# Internal pods connect via ollama-<hostname>:11434
+#
+# To coexist with bare-metal Ollama (port 11434), containers use hostPort 12434.
+# If bare-metal Ollama is stopped, change hostPort to 11434 and update
+# OLLAMA_PORT in forge_k3s.env accordingly.
+# 
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-iron
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-iron
+  template:
+    metadata:
+      labels:
+        app: ollama-iron
+    spec:
+      # Pin to iron: 1 GPU (TITAN X), 12 GB VRAM
+      nodeSelector:
+        kubernetes.io/hostname: iron
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          ports:
+            - containerPort: 11434
+              hostPort: 12434
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+      volumes:
+        - name: ollama-data
+          hostPath:
+            path: /usr/share/ollama/.ollama
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-iron
+spec:
+  selector:
+    app: ollama-iron
+  ports:
+    - port: 11434
+      targetPort: 11434

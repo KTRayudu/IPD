@@ -5,6 +5,7 @@ Parameters now configurable via EpisodeConfig
 """
 
 import requests
+import os                   # Added 3/30/2026 for Containerized Architecture @edc
 from typing import Optional
 import time
 
@@ -16,8 +17,14 @@ class OllamaAgent:
         self,
         agent_id: str,
         model: str,
-        host: str = "iron",
-        port: int = 11434,
+
+        # Begin Containerized Architecture changes, set default to tungsten per DH
+        # host: str = "iron",
+        # port: int = 11434,
+        host: str = os.environ.get('OLLAMA_HOST', 'tungsten'),
+        port: int = int(os.environ.get('OLLAMA_PORT', '11434')),
+        # End containerized architecture changes @edc, 3/30/2026
+
         temperature: float = 0.7,
         system_prompt: str = "",
         decision_token_limit: int = 256,

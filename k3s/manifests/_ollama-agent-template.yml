@@ -1,0 +1,101 @@
+#*******************************************************************************
+# FORGE Ollama Agent Deployments
+# 
+# Purpose:  Deploy Ollama LLM inference containers on GPU-capable cluster nodes
+# Usage:    kubectl apply -f k3s/<node-filename>
+#
+# Ref: https://hub.docker.com/r/ollama/ollama
+# Ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+#
+# Each GPU node gets its own Ollama deployment pinned to that node.
+# Models are stored in a persistent volume mounted from the host to avoid
+# re-downloading large model files on container restarts.
+#
+# Bare-metal clients connect via <hostname>:12434
+# Internal pods connect via ollama-<hostname>:11434
+#
+# To coexist with bare-metal Ollama (port 11434), containers use hostPort 12434.
+# If bare-metal Ollama is stopped, change hostPort to 11434 and update
+# OLLAMA_PORT in forge_k3s.env accordingly.
+# 
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-nickel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-nickel
+  template:
+    metadata:
+      labels:
+        app: ollama-nickel
+    spec:
+      # Pin to nickel: 3 GPUs (TITAN X + 2x 1080 Ti), 34 GB total VRAM
+      nodeSelector:
+        kubernetes.io/hostname: nickel
+        # Alternative: select by GPU capability instead of hostname
+        # gpu-vram-total-mib: "34816"
+
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+
+          # Note: K3s assigns GPUs automatically. To target specific
+          # GPUs (e.g., only the TITAN X), use NVIDIA_VISIBLE_DEVICES
+          # in conjunction with the resources section below.
+
+          # env:
+          #   - name: NVIDIA_VISIBLE_DEVICES 
+          # Choose only ONE of these configurations (3 examples listed)
+          # Use nvidia-smi to determine index numbers for each GPU
+          #     value: "0"      # GPU index 0 only
+          #     value: "0,1"    # GPUs 0 and 1
+          #     value: "0,2"    # GPUs 0 and 2
+
+          ports:
+            - containerPort: 11434
+              # hostPort allows direct access at nickel:12434 from bare-metal clients
+              hostPort: 12434
+
+          resources:
+            limits:
+              # Request all 3 GPUs on this node
+              nvidia.com/gpu: 3
+
+              # To use fewer GPUs, reduce the count:
+              # nvidia.com/gpu: 2  # use 2 of 3 GPUs
+              # nvidia.com/gpu: 1  # use 1 of 3 GPUs
+
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+      volumes:
+        - name: ollama-data
+          hostPath:
+            # Mount existing model directory to avoid re-downloading
+            # Adjust this path to match where Ollama models are stored on each node
+            path: /usr/share/ollama/.ollama
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-nickel
+spec:
+  selector:
+    app: ollama-nickel
+  ports:
+    - port: 11434        # port used by other pods in the cluster
+      targetPort: 11434  # port Ollama is listening on inside the container

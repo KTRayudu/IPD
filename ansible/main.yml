@@ -1,0 +1,36 @@
+#*******************************************************************************
+# Primary playbook for FORGE cluster setup
+# 
+# Purpose:  Primary controller for managing software on research cluster for project.
+#   Run only when software and hardware changes occur.
+# Usage:    ansible-playbook -K -i ansible/inventory.ini ansible/main.yml
+#     Note: -K flag prompts user for the SUDO password (BECOME Password:)
+# 
+# Prerequisites:
+#   1. All nodes must be running Ubuntu Linux
+#   2. SSH access from CONTROL to all nodes (key-based authentication)
+#   3. Sudo privileges on all nodes
+#   4. NVIDIA GPU drivers installed on all GPU nodes (verify: nvidia-smi)
+#   5. Ansible installed on primary host (verify: ansible --version)
+#   6. inventory.ini updated with correct hostnames
+#
+# Before running this playbook:
+#   - Run manage_hosts.yml to ensure /etc/hosts is consistent across nodes
+#   - Verify GPU drivers: ansible -i inventory.ini all -m shell -a "nvidia-smi" -K
+#
+# After running this playbook:
+#   - Apply K3s manifests: kubectl apply -f k3s/
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+---
+- import_playbook: install_docker.yml
+- import_playbook: install_nvidia_toolkit.yml
+- import_playbook: install_k3s.yml
+- import_playbook: configure_k3s.yml

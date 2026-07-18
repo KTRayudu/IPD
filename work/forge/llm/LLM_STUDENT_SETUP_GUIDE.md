@@ -559,7 +559,7 @@ Can LLM agents learn to cooperate in Iterated Prisoner's Dilemma? Can they expla
 - [Your communication channel - Slack/Discord/etc.]
 
 **Questions:**
-- Ask Doug: douglas.hart@regis.edu
+- Ask Doug: dhart@regis.edu
 - Ask in group channel
 - Schedule office hours
 

@@ -1,0 +1,24 @@
+#*******************************************************************************
+# FORGE Cluster Configuration
+# 
+# Purpose:  Institution-specific variables for FORGE cluster deployment.
+#           Edit this file to match your environment.
+#
+# NOTE:     These variables are referenced by Ansible playbooks in this directory.
+#           Do not rename variable keys without updating the corresponding playbooks.
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+
+# PostgreSQL persistent storage location on the control node
+forge_db_storage_path: /var/lib/forge/postgres
+
+# NVIDIA K8s device plugin version
+# Ref: https://github.com/NVIDIA/k8s-device-plugin/releases
+nvidia_device_plugin_version: v0.17.0

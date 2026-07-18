@@ -1,0 +1,35 @@
+#*******************************************************************************
+# Node Configuration
+#
+# Purpose:  Node-specific variables for copper.
+#           Edit GPU values to match your hardware.
+#
+# NOTE:     Filename must match the hostname in inventory.ini.
+#           Ansible automatically loads variables from this file
+#           for the matching host.
+#
+# Ref: Use 'nvidia-smi' to identify GPU model and memory.
+#
+# Author:
+#   Emily D. Carpenter
+#   Anderson College of Business and Computing, Regis University
+#   MSDS 696/S71: Data Science Practicum II
+#   Dr. Douglas Hart, Dr. Kellen Sorauf
+#   Practicum II, February-May 2026
+#*******************************************************************************
+
+# Hostname: Nickel
+# IP address
+host_ip: 100.77.78.99
+
+# GPU hardware configuration
+gpu_primary: titan-x-pascal
+gpu_primary_mib: 12288
+gpu_secondary: gtx-1080ti
+gpu_secondary_mib: 11264
+gpu_tertiary: gtx-1080ti
+gpu_tertiary_mib: 11264
+gpu_count: 3
+gpu_vram_total_mib: 34816
+
+

@@ -3,17 +3,19 @@
     FORGE Database ETL
     ETL Pipeline for Iterated Prisoner's Dilemma with LLM Agents
 
-    Practicum I - MSDS 692/S41: Data Science Practicum I
+    MSDS 692/S41: Data Science Practicum I
+    MSDS 696/S71: Data Science Practicum II
 
     Emily D. Carpenter
     Anderson College of Business and Computing, Regis University
 
     Advisors: Dr. Douglas Hart, Dr. Kellen Sorauf
 
-    February 2026
+    February-May 2026
 
     Revision History:
         20260316: Added new DB field "comment", updated method load_json() @edc
+        20260329: Updated for compatibility with containerized architecture @edc
 """
 
 import argparse
@@ -36,16 +38,22 @@ logging.basicConfig(
 )
 
 class ForgeDB:
-    def __init__(self, host='platinum', dbname='forge', user=None):
+    def __init__(self, dbname='forge', host='platinum',  user=None):
         """Initialize connection to the forge database."""
         if user is None:
             import getpass
             user = getpass.getuser()
+
+        # Local ENV used in containerized architecture; default to bare metal cluster
+        host = os.environ.get('FORGE_DB_HOST', 'platinum')
+        port = int(os.environ.get('FORGE_CONN_DB_PORT', '5432'))
+        db_user = os.environ.get('FORGE_DB_USER', user)
         
         self.conn = psycopg.connect(
             host=host,
+            port=port,
             dbname=dbname,
-            user=user,
+            user=db_user,
             row_factory=dict_row
         )
     

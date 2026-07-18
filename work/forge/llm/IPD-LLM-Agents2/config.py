@@ -2,7 +2,7 @@
 Configuration for Episodic IPD LLM Agents
 Defines hyperparameters for the simulation
 """
-
+import os                   # Added 3/30/2026 for Containerized Architecture @edc
 from dataclasses import dataclass
 from typing import Literal
 
@@ -21,10 +21,17 @@ class EpisodeConfig:
     
     # Agent parameters
     temperature: float = 0.7
+
+    # Begin Containerized Architecture changes, set default to tungsten per DH
+    # host_0: str = "iron"
+    # host_1: str = "iron"
+    host_0: str = os.environ.get('OLLAMA_HOST_0', 'tungsten')
+    host_1: str = os.environ.get('OLLAMA_HOST_1', 'tungsten')
+    # End Containerized Architecture changes @edc, 3/30/2026
+
     model_0: str = "llama3:8b-instruct-q5_K_M"
-    host_0: str = "iron"
     model_1: str = "llama3:8b-instruct-q5_K_M"
-    host_1: str = "iron"
+    # End Agent parameters
     
     # LLM generation parameters (high-risk - can cause truncation/failures)
     decision_token_limit: int = 256      # Max tokens for decision responses
